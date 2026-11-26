@@ -1,0 +1,51 @@
+#!/bin/bash
+# Boot script for each API instance (Amazon Linux 2023): install Docker, then keep the
+# NurseSync container running with settings pulled from SSM Parameter Store.
+set -euxo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+cat > /usr/local/bin/nursesync-run.sh <<'SCRIPT'
+#!/bin/bash
+set -uo pipefail
+REGION="${region}"
+
+# settings: /nursesync/NAME -> NAME=value
+aws ssm get-parameters-by-path --region "$REGION" --path "${ssm_path}" --with-decryption \
+  --query 'Parameters[*].[Name,Value]' --output text \
+  | awk -F'\t' '{ n=$1; sub(".*/", "", n); print n "=" $2 }' > /etc/nursesync.env
+chmod 600 /etc/nursesync.env
+
+# the image may not be pushed yet on the very first boot: keep trying
+until aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "${registry}" \
+      && docker pull "${image}"; do
+  echo "waiting for ${image}"; sleep 30
+done
+
+docker rm -f nursesync 2>/dev/null || true
+exec docker run --name nursesync --rm -p 8000:8000 \
+  --env-file /etc/nursesync.env \
+  --log-driver awslogs --log-opt awslogs-region="$REGION" \
+  --log-opt awslogs-group="${log_group}" --log-opt awslogs-create-group=false \
+  "${image}"
+SCRIPT
+chmod +x /usr/local/bin/nursesync-run.sh
+
+cat > /etc/systemd/system/nursesync.service <<'UNIT'
+[Unit]
+Description=NurseSync API container
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+ExecStart=/usr/local/bin/nursesync-run.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now nursesync.service

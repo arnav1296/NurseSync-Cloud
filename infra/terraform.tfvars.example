@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+
+region       = "ap-south-1"
+budget_email = "you@example.com"
+
+# optional: one inbox that receives every alert/handoff notification and alarm
+notification_email = "you@example.com"
+
+# optional: voice notes and AI summaries
+groq_api_key   = ""
+sarvam_api_key = ""

@@ -1,0 +1,29 @@
+# secrets and local settings
+.env
+.env.*
+!.env.example
+infra/terraform.tfvars
+
+# Terraform
+infra/.terraform/
+infra/.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+infra/build/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node / build
+node_modules/
+dist/
+frontend/src-tauri/target/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
