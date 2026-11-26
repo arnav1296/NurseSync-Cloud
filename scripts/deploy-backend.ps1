@@ -9,7 +9,9 @@ $asg    = terraform -chdir="$root\infra" output -raw asg_name
 $registry = $repo.Split("/")[0]
 
 Write-Host "Logging in to $registry"
-aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $registry
+# piped through cmd: Windows PowerShell 5.1 re-encodes native-to-native pipes, which
+# corrupts the token and makes ECR answer 400 Bad Request
+cmd /c "aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $registry"
 if ($LASTEXITCODE -ne 0) { throw "ECR login failed" }
 
 Write-Host "Building and pushing $repo`:latest"
