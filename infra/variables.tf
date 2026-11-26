@@ -1,7 +1,7 @@
 variable "region" {
-  description = "AWS region (Mumbai keeps latency low for Indian wards)."
+  description = "AWS region (the free-plan account is locked to Sydney)."
   type        = string
-  default     = "ap-south-1"
+  default     = "ap-southeast-2"
 }
 
 variable "project" {

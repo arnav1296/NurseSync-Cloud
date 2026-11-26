@@ -61,7 +61,7 @@ scripts/    deploy-backend.ps1, deploy-frontend.ps1, seed-demo.ps1
 **You need:** an AWS account (IAM user with `AdministratorAccess`, MFA on), and on your machine the **AWS CLI**, **Terraform**, **Docker Desktop** and **Node 20+**.
 
 ```powershell
-aws configure                       # access key of your IAM user, region ap-south-1
+aws configure                       # access key of your IAM user, region ap-southeast-2
 
 # 1. create the infrastructure (~15 minutes; RDS and CloudFront are the slow parts)
 cd infra
