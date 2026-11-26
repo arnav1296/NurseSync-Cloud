@@ -10,6 +10,7 @@ Cognito per request; the keys are fetched once and cached.
 """
 
 import asyncio
+import logging
 from functools import lru_cache
 from typing import Optional
 
@@ -18,6 +19,8 @@ from fastapi import Depends, Header, HTTPException, status
 
 from config import AWS_REGION, COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID
 from services.db import get_staff_by_sub
+
+logger = logging.getLogger("nursesync.auth")
 
 
 def _issuer() -> str:
@@ -48,7 +51,9 @@ async def _resolve_sub(token: str) -> str:
     try:
         # the first call fetches the signing keys over the network
         claims = await asyncio.to_thread(_verify, token)
-    except Exception:
+    except Exception as exc:
+        # the reason goes to the logs only; the client just learns the session is bad
+        logger.warning("access token rejected: %s: %s", type(exc).__name__, exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired session."
         )
